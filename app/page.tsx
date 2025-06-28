@@ -59,6 +59,11 @@ export default function Portfolio() {
   const [isDragOver, setIsDragOver] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
 
+  // Certificate persistence states
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState<string | null>(null)
+
   // Your secure password
   const SECURE_PASSWORD = "Saradhi@761"
 
@@ -211,6 +216,7 @@ export default function Portfolio() {
         }
 
         setUploadedCertificates((prev) => [...prev, newCertificate])
+        setHasUnsavedChanges(true) // Mark as unsaved
       } catch (error) {
         console.error("Error uploading file:", error)
       }
@@ -228,14 +234,69 @@ export default function Portfolio() {
       }
       return updated
     })
+    setHasUnsavedChanges(true) // Mark as unsaved
   }
 
   const handleEditCertificate = (certificateId: string | number, updates: any) => {
     setUploadedCertificates((prev) => prev.map((cert) => (cert.id === certificateId ? { ...cert, ...updates } : cert)))
+    setHasUnsavedChanges(true) // Mark as unsaved
+  }
+
+  // Load certificates from localStorage
+  const loadSavedCertificates = () => {
+    try {
+      const saved = localStorage.getItem("portfolio-certificates")
+      if (saved) {
+        const certificates = JSON.parse(saved)
+        setUploadedCertificates(certificates)
+        const savedTime = localStorage.getItem("portfolio-certificates-timestamp")
+        if (savedTime) {
+          setLastSaved(new Date(savedTime).toLocaleString())
+        }
+      }
+    } catch (error) {
+      console.error("Error loading certificates:", error)
+    }
+  }
+
+  // Save certificates to localStorage
+  const saveCertificates = async () => {
+    setIsSaving(true)
+    try {
+      // Simulate save delay for better UX
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      localStorage.setItem("portfolio-certificates", JSON.stringify(uploadedCertificates))
+      localStorage.setItem("portfolio-certificates-timestamp", new Date().toISOString())
+
+      setHasUnsavedChanges(false)
+      setLastSaved(new Date().toLocaleString())
+
+      // Show success message
+      alert("✅ Certificates saved successfully!")
+    } catch (error) {
+      console.error("Error saving certificates:", error)
+      alert("❌ Failed to save certificates. Please try again.")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // Clear all saved certificates
+  const clearAllCertificates = () => {
+    if (confirm("⚠️ Are you sure you want to delete all certificates? This action cannot be undone.")) {
+      setUploadedCertificates([])
+      localStorage.removeItem("portfolio-certificates")
+      localStorage.removeItem("portfolio-certificates-timestamp")
+      setHasUnsavedChanges(false)
+      setLastSaved(null)
+      alert("🗑️ All certificates have been deleted.")
+    }
   }
 
   const openCertificateSection = () => {
     if (isAuthenticated) {
+      loadSavedCertificates() // Load certificates when opening
       setIsCertificateViewOpen(true)
     } else {
       setIsPasswordDialogOpen(true)
@@ -259,6 +320,11 @@ export default function Portfolio() {
 
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
+  // Load saved certificates on component mount
+  useEffect(() => {
+    loadSavedCertificates()
   }, [])
 
   useEffect(() => {
@@ -1047,8 +1113,47 @@ export default function Portfolio() {
                 <Shield className="h-3 w-3 mr-1" />
                 Authenticated
               </Badge>
+              {hasUnsavedChanges && (
+                <Badge variant="destructive" className="ml-2">
+                  Unsaved Changes
+                </Badge>
+              )}
             </DialogTitle>
           </DialogHeader>
+
+          {/* Save Controls */}
+          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700 rounded-lg mb-6">
+            <div className="flex items-center gap-4">
+              <Button
+                onClick={saveCertificates}
+                disabled={isSaving || !hasUnsavedChanges}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                {isSaving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Shield className="mr-2 h-4 w-4" />
+                    Save Certificates
+                  </>
+                )}
+              </Button>
+
+              {certificates.length > 0 && (
+                <Button onClick={clearAllCertificates} variant="destructive" className="bg-red-600 hover:bg-red-700">
+                  <X className="mr-2 h-4 w-4" />
+                  Clear All
+                </Button>
+              )}
+            </div>
+
+            <div className="text-sm text-slate-500 dark:text-slate-400">
+              {lastSaved ? <span>Last saved: {lastSaved}</span> : <span>No saved data</span>}
+            </div>
+          </div>
 
           {/* Upload Area */}
           <div className="mb-6">
@@ -1118,9 +1223,19 @@ export default function Portfolio() {
                 <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300">
                   Your Certificates ({certificates.length})
                 </h3>
-                <Badge variant="outline" className="text-slate-600 dark:text-slate-400">
-                  Private Collection
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-slate-600 dark:text-slate-400">
+                    Private Collection
+                  </Badge>
+                  {hasUnsavedChanges && (
+                    <Badge
+                      variant="secondary"
+                      className="bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300"
+                    >
+                      ⚠️ Unsaved
+                    </Badge>
+                  )}
+                </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">
@@ -1195,6 +1310,28 @@ export default function Portfolio() {
                 ))}
               </div>
             </>
+          )}
+
+          {/* Save Reminder Footer */}
+          {hasUnsavedChanges && (
+            <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-yellow-700 dark:text-yellow-300">
+                  <Award className="h-5 w-5" />
+                  <span className="font-medium">You have unsaved changes</span>
+                </div>
+                <Button
+                  onClick={saveCertificates}
+                  disabled={isSaving}
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white"
+                >
+                  {isSaving ? "Saving..." : "Save Now"}
+                </Button>
+              </div>
+              <p className="text-sm text-yellow-600 dark:text-yellow-400 mt-2">
+                Don't forget to save your certificates before closing the cabin!
+              </p>
+            </div>
           )}
         </DialogContent>
       </Dialog>
