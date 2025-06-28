@@ -15,14 +15,61 @@ export default function Portfolio() {
   const [showBackToTop, setShowBackToTop] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [typedText, setTypedText] = useState("")
+  const [currentWordIndex, setCurrentWordIndex] = useState(0)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const words = ["DATA ANALYST", "PYTHON DEVELOPER", "ML ENGINEER", "BI SPECIALIST"]
+  const typingSpeed = 100
+  const deletingSpeed = 50
+  const pauseTime = 2000
 
   useEffect(() => {
     const handleScroll = () => {
       setShowBackToTop(window.scrollY > 300)
+
+      // Animate elements on scroll
+      const elements = document.querySelectorAll(".animate-on-scroll")
+      elements.forEach((element) => {
+        const elementTop = element.getBoundingClientRect().top
+        const elementVisible = 150
+
+        if (elementTop < window.innerHeight - elementVisible) {
+          element.classList.add("animate-fade-in-up")
+        }
+      })
     }
+
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
+
+  // Typing animation effect
+  useEffect(() => {
+    const currentWord = words[currentWordIndex]
+
+    const timeout = setTimeout(
+      () => {
+        if (!isDeleting) {
+          if (typedText.length < currentWord.length) {
+            setTypedText(currentWord.slice(0, typedText.length + 1))
+          } else {
+            setTimeout(() => setIsDeleting(true), pauseTime)
+          }
+        } else {
+          if (typedText.length > 0) {
+            setTypedText(currentWord.slice(0, typedText.length - 1))
+          } else {
+            setIsDeleting(false)
+            setCurrentWordIndex((prev) => (prev + 1) % words.length)
+          }
+        }
+      },
+      isDeleting ? deletingSpeed : typingSpeed,
+    )
+
+    return () => clearTimeout(timeout)
+  }, [typedText, isDeleting, currentWordIndex, words])
 
   useEffect(() => {
     // Load EmailJS script
@@ -159,20 +206,174 @@ export default function Portfolio() {
   ]
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-blue-900">
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes fadeInLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes fadeInRight {
+          from {
+            opacity: 0;
+            transform: translateX(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
+        }
+
+        @keyframes pulse {
+          0%, 100% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.05);
+          }
+        }
+
+        @keyframes slideInFromTop {
+          from {
+            opacity: 0;
+            transform: translateY(-100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes bounceIn {
+          0% {
+            opacity: 0;
+            transform: scale(0.3);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.05);
+          }
+          70% {
+            transform: scale(0.9);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        .animate-fade-in-up {
+          animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        .animate-fade-in-left {
+          animation: fadeInLeft 0.8s ease-out forwards;
+        }
+
+        .animate-fade-in-right {
+          animation: fadeInRight 0.8s ease-out forwards;
+        }
+
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
+        }
+
+        .animate-pulse-slow {
+          animation: pulse 2s ease-in-out infinite;
+        }
+
+        .animate-slide-in-top {
+          animation: slideInFromTop 0.6s ease-out forwards;
+        }
+
+        .animate-bounce-in {
+          animation: bounceIn 0.8s ease-out forwards;
+        }
+
+        .animate-on-scroll {
+          opacity: 0;
+          transform: translateY(30px);
+          transition: all 0.8s ease-out;
+        }
+
+        .typing-cursor::after {
+          content: '|';
+          animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+          0%, 50% { opacity: 1; }
+          51%, 100% { opacity: 0; }
+        }
+
+        .hover-scale {
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .hover-scale:hover {
+          transform: translateY(-5px) scale(1.02);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .hover-glow:hover {
+          box-shadow: 0 0 20px rgba(251, 146, 60, 0.5);
+          transition: box-shadow 0.3s ease;
+        }
+
+        .stagger-animation > * {
+          opacity: 0;
+          transform: translateY(20px);
+          animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .stagger-animation > *:nth-child(1) { animation-delay: 0.1s; }
+        .stagger-animation > *:nth-child(2) { animation-delay: 0.2s; }
+        .stagger-animation > *:nth-child(3) { animation-delay: 0.3s; }
+        .stagger-animation > *:nth-child(4) { animation-delay: 0.4s; }
+        .stagger-animation > *:nth-child(5) { animation-delay: 0.5s; }
+        .stagger-animation > *:nth-child(6) { animation-delay: 0.6s; }
+      `}</style>
+
       {/* Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700 z-50">
+      <nav className="fixed top-0 left-0 right-0 bg-blue-900/95 backdrop-blur-sm border-b border-blue-300 z-50 animate-slide-in-top">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <div className="font-bold text-xl text-white">DATA ANALYST PORTFOLIO</div>
+            <div className="font-bold text-xl text-white animate-fade-in-left">DATA ANALYST PORTFOLIO</div>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              {navigationItems.map((item) => (
+            <div className="hidden md:flex items-center space-x-8 animate-fade-in-right">
+              {navigationItems.map((item, index) => (
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className="text-slate-300 hover:text-orange-400 transition-colors font-medium uppercase text-sm tracking-wider"
+                  className="text-slate-300 hover:text-orange-400 transition-all duration-300 font-medium uppercase text-sm tracking-wider hover:scale-110"
+                  style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   {item.name}
                 </button>
@@ -181,7 +382,7 @@ export default function Portfolio() {
 
             {/* Mobile Menu Button */}
             <button
-              className="md:hidden p-2 text-white border border-slate-600 rounded"
+              className="md:hidden p-2 text-white border border-blue-300 rounded hover:bg-blue-800 transition-all duration-300 hover:scale-105"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               <span className="text-xs mr-2">MENU</span>
@@ -191,12 +392,13 @@ export default function Portfolio() {
 
           {/* Mobile Navigation */}
           {mobileMenuOpen && (
-            <div className="md:hidden py-4 border-t border-slate-700">
-              {navigationItems.map((item) => (
+            <div className="md:hidden py-4 border-t border-blue-300 animate-fade-in-up bg-blue-800">
+              {navigationItems.map((item, index) => (
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className="block w-full text-left px-4 py-2 text-slate-300 hover:text-orange-400 hover:bg-slate-800 transition-colors uppercase text-sm tracking-wider"
+                  className="block w-full text-left px-4 py-2 text-slate-300 hover:text-orange-400 hover:bg-blue-800 transition-all duration-300 uppercase text-sm tracking-wider"
+                  style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   {item.name}
                 </button>
@@ -211,15 +413,15 @@ export default function Portfolio() {
         id="home"
         className="relative min-h-screen flex items-center justify-center text-white pt-16"
         style={{
-          background: "linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%)",
+          background: "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%)",
         }}
       >
         <div className="absolute inset-0 bg-black/20"></div>
 
         <div className="relative z-10 container mx-auto px-4 text-center">
           {/* Professional Photo */}
-          <div className="mb-8">
-            <div className="w-48 h-48 mx-auto rounded-full bg-gradient-to-br from-orange-400 to-blue-400 p-1">
+          <div className="mb-8 animate-bounce-in">
+            <div className="w-48 h-48 mx-auto rounded-full bg-gradient-to-br from-orange-400 to-blue-400 p-1 animate-float">
               <div className="w-full h-full rounded-full bg-slate-800 p-2">
                 <Image
                   src="/images/profile-photo.png"
@@ -232,20 +434,34 @@ export default function Portfolio() {
             </div>
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-wider">HI, I'M S. GAYA SARADHI BALARAM</h1>
+          <h1
+            className="text-5xl md:text-7xl font-bold mb-6 tracking-wider animate-fade-in-up"
+            style={{ animationDelay: "0.2s" }}
+          >
+            HI, I'M S. GAYA SARADHI BALARAM
+          </h1>
 
-          <p className="text-xl md:text-2xl mb-4 text-slate-200 tracking-wide">
-            DATA ANALYST | PYTHON | POWER BI | SQL | MACHINE LEARNING | TABLEAU
-          </p>
+          <div
+            className="text-xl md:text-2xl mb-4 text-slate-200 tracking-wide animate-fade-in-up typing-cursor"
+            style={{ animationDelay: "0.4s" }}
+          >
+            {typedText}
+          </div>
 
-          <p className="text-lg md:text-xl mb-12 text-slate-300 max-w-4xl mx-auto leading-relaxed">
+          <p
+            className="text-lg md:text-xl mb-12 text-slate-300 max-w-4xl mx-auto leading-relaxed animate-fade-in-up"
+            style={{ animationDelay: "0.6s" }}
+          >
             TURNING DATA INTO DECISIONS WITH INSIGHTFUL ANALYSIS AND VISUALIZATION.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+          <div
+            className="flex flex-col sm:flex-row gap-6 justify-center animate-fade-in-up"
+            style={{ animationDelay: "0.8s" }}
+          >
             <Button
               size="lg"
-              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg font-semibold tracking-wider"
+              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg font-semibold tracking-wider hover-glow transition-all duration-300 hover:scale-105"
               onClick={handleDownloadResume}
             >
               <ChevronRight className="mr-2 h-5 w-5" />
@@ -255,7 +471,7 @@ export default function Portfolio() {
             <Button
               size="lg"
               variant="outline"
-              className="border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white px-8 py-4 text-lg font-semibold tracking-wider bg-transparent"
+              className="border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white px-8 py-4 text-lg font-semibold tracking-wider bg-transparent transition-all duration-300 hover:scale-105"
               onClick={() => scrollToSection("projects")}
             >
               <ChevronRight className="mr-2 h-5 w-5" />
@@ -268,26 +484,26 @@ export default function Portfolio() {
       {/* About Section */}
       <section
         id="about"
-        className="py-20 text-white relative"
+        className="py-20 text-blue-900 relative"
         style={{
-          background: "linear-gradient(135deg, #334155 0%, #475569 50%, #64748b 100%)",
+          background: "linear-gradient(135deg, #3b82f6 0%, #60a5fa 50%, #ffffff 100%)",
         }}
       >
         <div className="absolute inset-0 bg-black/10"></div>
 
         <div className="relative z-10 container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-4xl md:text-5xl font-bold mb-12 tracking-wider">WHO AM I?</h2>
+            <h2 className="text-4xl md:text-5xl font-bold mb-12 tracking-wider animate-on-scroll">WHO AM I?</h2>
 
-            <div className="mb-12">
-              <p className="text-lg md:text-xl leading-relaxed text-slate-200 mb-6">
+            <div className="mb-12 animate-on-scroll">
+              <p className="text-lg md:text-xl leading-relaxed text-blue-900 mb-6">
                 Driven by a passion for Machine Learning and Data Science, I strive to solve real-world problems using
                 predictive modeling, data analysis, and visualization tools. As a 2025 graduate in Artificial
                 Intelligence and Data Science from K L University (CGPA: 9.37), I aim to create a meaningful impact in
                 every project I take on.
               </p>
 
-              <p className="text-lg leading-relaxed text-slate-300 mb-6">
+              <p className="text-lg leading-relaxed text-blue-900 mb-6">
                 My journey in data science began with a curiosity about how data can tell stories and drive decisions.
                 Through my academic pursuits and hands-on internship experiences, I've developed expertise in
                 statistical analysis, machine learning algorithms, and data visualization techniques. I'm particularly
@@ -295,7 +511,7 @@ export default function Portfolio() {
                 actionable insights.
               </p>
 
-              <p className="text-lg leading-relaxed text-slate-300 mb-8">
+              <p className="text-lg leading-relaxed text-blue-900 mb-8">
                 With experience in both technical implementation and business communication, I bridge the gap between
                 complex data analysis and strategic business decisions. My goal is to help organizations leverage their
                 data assets to drive growth, optimize operations, and gain competitive advantages in today's data-driven
@@ -304,12 +520,12 @@ export default function Portfolio() {
             </div>
 
             {/* Technical Skills */}
-            <div className="mb-16">
+            <div className="mb-16 animate-on-scroll">
               <h3 className="text-2xl font-bold mb-8 tracking-wider">TECHNICAL SKILLS</h3>
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-slate-700/30 p-6 rounded-lg border border-slate-600">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 stagger-animation">
+                <div className="bg-white/80 p-6 rounded-lg border border-white/30 hover-scale">
                   <h4 className="text-orange-400 font-bold mb-4">Programming Languages</h4>
-                  <ul className="text-slate-300 space-y-2">
+                  <ul className="text-blue-900 space-y-2">
                     <li>• Python (Advanced)</li>
                     <li>• SQL (Advanced)</li>
                     <li>• R (Intermediate)</li>
@@ -318,9 +534,9 @@ export default function Portfolio() {
                   </ul>
                 </div>
 
-                <div className="bg-slate-700/30 p-6 rounded-lg border border-slate-600">
+                <div className="bg-white/80 p-6 rounded-lg border border-white/30 hover-scale">
                   <h4 className="text-orange-400 font-bold mb-4">Data Analysis & ML</h4>
-                  <ul className="text-slate-300 space-y-2">
+                  <ul className="text-blue-900 space-y-2">
                     <li>• Pandas, NumPy</li>
                     <li>• Scikit-learn</li>
                     <li>• TensorFlow, Keras</li>
@@ -329,9 +545,9 @@ export default function Portfolio() {
                   </ul>
                 </div>
 
-                <div className="bg-slate-700/30 p-6 rounded-lg border border-slate-600">
+                <div className="bg-white/80 p-6 rounded-lg border border-white/30 hover-scale">
                   <h4 className="text-orange-400 font-bold mb-4">Visualization Tools</h4>
-                  <ul className="text-slate-300 space-y-2">
+                  <ul className="text-blue-900 space-y-2">
                     <li>• Power BI (Advanced)</li>
                     <li>• Tableau (Intermediate)</li>
                     <li>• Matplotlib, Seaborn</li>
@@ -340,9 +556,9 @@ export default function Portfolio() {
                   </ul>
                 </div>
 
-                <div className="bg-slate-700/30 p-6 rounded-lg border border-slate-600">
+                <div className="bg-white/80 p-6 rounded-lg border border-white/30 hover-scale">
                   <h4 className="text-orange-400 font-bold mb-4">Tools & Platforms</h4>
-                  <ul className="text-slate-300 space-y-2">
+                  <ul className="text-blue-900 space-y-2">
                     <li>• Jupyter Notebook</li>
                     <li>• Git, GitHub</li>
                     <li>• Google Cloud Platform</li>
@@ -354,18 +570,18 @@ export default function Portfolio() {
             </div>
 
             {/* Education Section */}
-            <div className="mb-16">
+            <div className="mb-16 animate-on-scroll">
               <h3 className="text-2xl font-bold mb-8 tracking-wider">EDUCATION</h3>
-              <div className="bg-slate-700/30 p-8 rounded-lg border border-slate-600">
+              <div className="bg-white/80 p-8 rounded-lg border border-white/30 hover-scale">
                 <div className="flex items-start gap-4">
-                  <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 animate-pulse-slow">
                     <Award className="h-8 w-8 text-white" />
                   </div>
                   <div className="flex-1">
                     <h4 className="text-xl font-bold text-orange-400 mb-2">
                       Bachelor of Technology in Artificial Intelligence and Data Science
                     </h4>
-                    <p className="text-lg text-slate-300 mb-2">K L University, Vijayawada</p>
+                    <p className="text-lg text-blue-900 mb-2">K L University, Vijayawada</p>
                     <div className="flex flex-wrap items-center gap-4 mb-4">
                       <span className="flex items-center gap-2 text-slate-400">
                         <Calendar className="h-4 w-4" />
@@ -373,7 +589,7 @@ export default function Portfolio() {
                       </span>
                       <span className="font-semibold text-orange-400 text-lg">CGPA: 9.37/10</span>
                     </div>
-                    <div className="text-slate-300">
+                    <div className="text-blue-900">
                       <p className="mb-3">
                         <strong>Relevant Coursework:</strong>
                       </p>
@@ -393,10 +609,10 @@ export default function Portfolio() {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
+            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16 animate-on-scroll">
               <Button
                 size="lg"
-                className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg font-semibold tracking-wider"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg font-semibold tracking-wider hover-glow transition-all duration-300 hover:scale-105"
                 onClick={() => scrollToSection("experience")}
               >
                 <ChevronRight className="mr-2 h-5 w-5" />I WANT TO KNOW MORE!!
@@ -405,7 +621,7 @@ export default function Portfolio() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white px-8 py-4 text-lg font-semibold tracking-wider bg-transparent"
+                className="border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white px-8 py-4 text-lg font-semibold tracking-wider bg-transparent transition-all duration-300 hover:scale-105"
                 onClick={() => scrollToSection("experience")}
               >
                 <ChevronRight className="mr-2 h-5 w-5" />
@@ -414,14 +630,14 @@ export default function Portfolio() {
             </div>
 
             {/* Certifications */}
-            <div>
+            <div className="animate-on-scroll">
               <h3 className="text-2xl font-bold mb-8 tracking-wider">CERTIFICATIONS</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 stagger-animation">
                 {certifications.map((cert, index) => (
                   <Badge
                     key={index}
                     variant="secondary"
-                    className="p-4 text-center justify-center bg-slate-700/50 text-white hover:bg-slate-600/50 border border-slate-600"
+                    className="p-4 text-center justify-center bg-white/80 text-blue-900 hover:bg-slate-600/50 border border-white/30 hover-scale transition-all duration-300"
                   >
                     <Award className="h-4 w-4 mr-2" />
                     {cert}
@@ -438,18 +654,20 @@ export default function Portfolio() {
         id="experience"
         className="py-20 text-white relative"
         style={{
-          background: "linear-gradient(135deg, #475569 0%, #64748b 50%, #334155 100%)",
+          background: "linear-gradient(135deg, #60a5fa 0%, #ffffff 50%, #3b82f6 100%)",
         }}
       >
         <div className="absolute inset-0 bg-black/10"></div>
 
         <div className="relative z-10 container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center tracking-wider">INTERNSHIP EXPERIENCE</h2>
+            <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center tracking-wider animate-on-scroll">
+              INTERNSHIP EXPERIENCE
+            </h2>
 
             <div className="space-y-12">
               {/* Internship 1 */}
-              <Card className="bg-slate-800/50 border-slate-600 text-white">
+              <Card className="bg-blue-800/50 border-blue-300 text-white hover-scale animate-on-scroll">
                 <CardContent className="pt-8">
                   <div className="flex items-start justify-between mb-6">
                     <div>
@@ -463,19 +681,19 @@ export default function Portfolio() {
                   </div>
 
                   <ul className="space-y-3 text-slate-200">
-                    <li className="flex items-start gap-3">
+                    <li className="flex items-start gap-3 animate-fade-in-left" style={{ animationDelay: "0.1s" }}>
                       <ChevronRight className="h-5 w-5 text-orange-400 mt-0.5 flex-shrink-0" />
                       Worked on Power BI dashboards for comprehensive business analytics and reporting
                     </li>
-                    <li className="flex items-start gap-3">
+                    <li className="flex items-start gap-3 animate-fade-in-left" style={{ animationDelay: "0.2s" }}>
                       <ChevronRight className="h-5 w-5 text-orange-400 mt-0.5 flex-shrink-0" />
                       Developed image segmentation models using computer vision techniques
                     </li>
-                    <li className="flex items-start gap-3">
+                    <li className="flex items-start gap-3 animate-fade-in-left" style={{ animationDelay: "0.3s" }}>
                       <ChevronRight className="h-5 w-5 text-orange-400 mt-0.5 flex-shrink-0" />
                       Built ML model development pipelines and automated data preprocessing workflows
                     </li>
-                    <li className="flex items-start gap-3">
+                    <li className="flex items-start gap-3 animate-fade-in-left" style={{ animationDelay: "0.4s" }}>
                       <ChevronRight className="h-5 w-5 text-orange-400 mt-0.5 flex-shrink-0" />
                       Collaborated with cross-functional teams on data-driven business solutions
                     </li>
@@ -484,12 +702,12 @@ export default function Portfolio() {
               </Card>
 
               {/* Internship 2 */}
-              <Card className="bg-slate-800/50 border-slate-600 text-white">
+              <Card className="bg-white/90 border-white/30 text-blue-900 hover-scale animate-on-scroll">
                 <CardContent className="pt-8">
                   <div className="flex items-start justify-between mb-6">
                     <div>
                       <h3 className="text-2xl font-bold text-orange-400 mb-2">Data Science Intern</h3>
-                      <p className="text-xl text-slate-300 mb-2">Bharat Intern (Virtual)</p>
+                      <p className="text-xl text-blue-900 mb-2">Bharat Intern (Virtual)</p>
                       <div className="flex items-center gap-2 text-slate-400">
                         <Calendar className="h-4 w-4" />
                         <span>Jun 2023 - Jul 2023</span>
@@ -497,20 +715,20 @@ export default function Portfolio() {
                     </div>
                   </div>
 
-                  <ul className="space-y-3 text-slate-200">
-                    <li className="flex items-start gap-3">
+                  <ul className="space-y-3 text-blue-900">
+                    <li className="flex items-start gap-3 animate-fade-in-left" style={{ animationDelay: "0.1s" }}>
                       <ChevronRight className="h-5 w-5 text-orange-400 mt-0.5 flex-shrink-0" />
                       Built ML classification models with high accuracy using ensemble methods
                     </li>
-                    <li className="flex items-start gap-3">
+                    <li className="flex items-start gap-3 animate-fade-in-left" style={{ animationDelay: "0.2s" }}>
                       <ChevronRight className="h-5 w-5 text-orange-400 mt-0.5 flex-shrink-0" />
                       Performed comprehensive exploratory data analysis on large datasets
                     </li>
-                    <li className="flex items-start gap-3">
+                    <li className="flex items-start gap-3 animate-fade-in-left" style={{ animationDelay: "0.3s" }}>
                       <ChevronRight className="h-5 w-5 text-orange-400 mt-0.5 flex-shrink-0" />
                       Developed end-to-end ML pipelines from data collection to model deployment
                     </li>
-                    <li className="flex items-start gap-3">
+                    <li className="flex items-start gap-3 animate-fade-in-left" style={{ animationDelay: "0.4s" }}>
                       <ChevronRight className="h-5 w-5 text-orange-400 mt-0.5 flex-shrink-0" />
                       Created data visualizations and statistical reports for stakeholder presentations
                     </li>
@@ -527,29 +745,32 @@ export default function Portfolio() {
         id="projects"
         className="py-20 text-white relative"
         style={{
-          background: "linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%)",
+          background: "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%)",
         }}
       >
         <div className="absolute inset-0 bg-black/10"></div>
 
         <div className="relative z-10 container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center tracking-wider">PROJECTS</h2>
+            <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center tracking-wider animate-on-scroll">
+              PROJECTS
+            </h2>
 
             <div className="grid md:grid-cols-2 gap-8">
               {projects.map((project, index) => (
                 <Card
                   key={index}
-                  className="bg-slate-800/50 border-slate-600 text-white hover:bg-slate-700/50 transition-all duration-300"
+                  className={`bg-${index % 2 === 0 ? "blue-800/50" : "white/90"} border-${index % 2 === 0 ? "blue-300" : "white/30"} text-${index % 2 === 0 ? "white" : "blue-900"} hover-scale transition-all duration-500 animate-on-scroll`}
+                  style={{ animationDelay: `${index * 0.2}s` }}
                 >
                   <CardContent className="p-0">
-                    <div className="aspect-video bg-slate-700 rounded-t-lg mb-6 flex items-center justify-center">
+                    <div className="aspect-video bg-slate-700 rounded-t-lg mb-6 flex items-center justify-center overflow-hidden">
                       <Image
                         src={project.image || "/placeholder.svg"}
                         alt={project.title}
                         width={300}
                         height={200}
-                        className="rounded-t-lg object-cover w-full h-full"
+                        className="rounded-t-lg object-cover w-full h-full transition-transform duration-500 hover:scale-110"
                       />
                     </div>
 
@@ -565,7 +786,7 @@ export default function Portfolio() {
                       </p>
 
                       <Button
-                        className="bg-orange-500 hover:bg-orange-600 text-white font-semibold tracking-wider"
+                        className="bg-orange-500 hover:bg-orange-600 text-white font-semibold tracking-wider hover-glow transition-all duration-300 hover:scale-105"
                         onClick={handleGitHubClick}
                       >
                         <ChevronRight className="mr-2 h-4 w-4" />
@@ -585,30 +806,32 @@ export default function Portfolio() {
         id="contact"
         className="py-20 text-white relative"
         style={{
-          background: "linear-gradient(135deg, #334155 0%, #475569 50%, #64748b 100%)",
+          background: "linear-gradient(135deg, #3b82f6 0%, #60a5fa 50%, #ffffff 100%)",
         }}
       >
         <div className="absolute inset-0 bg-black/20"></div>
 
         <div className="relative z-10 container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-4xl md:text-5xl font-bold mb-8 text-center tracking-wider">GET IN TOUCH</h2>
+            <h2 className="text-4xl md:text-5xl font-bold mb-8 text-center tracking-wider animate-on-scroll">
+              GET IN TOUCH
+            </h2>
 
-            <p className="text-xl text-center mb-12 text-slate-200">
+            <p className="text-xl text-center mb-12 text-blue-900 animate-on-scroll">
               Let's chat! Your data, my brain - together we can be unstoppable.
             </p>
 
             <div className="grid md:grid-cols-2 gap-12">
               {/* Contact Info */}
-              <div className="space-y-8">
-                <div className="flex items-center gap-4">
+              <div className="space-y-8 animate-on-scroll">
+                <div className="flex items-center gap-4 hover:text-orange-400 transition-colors duration-300">
                   <MapPin className="h-6 w-6 text-orange-400" />
                   <span className="text-lg">India (Open for Relocation)</span>
                 </div>
 
                 <button
                   onClick={handleEmailClick}
-                  className="flex items-center gap-4 hover:text-orange-400 transition-colors"
+                  className="flex items-center gap-4 hover:text-orange-400 transition-all duration-300 hover:scale-105"
                 >
                   <Mail className="h-6 w-6 text-orange-400" />
                   <span className="text-lg">saradhisaragadam761@gmail.com</span>
@@ -616,7 +839,7 @@ export default function Portfolio() {
 
                 <button
                   onClick={handleGitHubClick}
-                  className="flex items-center gap-4 hover:text-orange-400 transition-colors"
+                  className="flex items-center gap-4 hover:text-orange-400 transition-all duration-300 hover:scale-105"
                 >
                   <Github className="h-6 w-6 text-orange-400" />
                   <span className="text-lg">github.com/GayaSaradiBalaram</span>
@@ -624,7 +847,7 @@ export default function Portfolio() {
 
                 <button
                   onClick={handleLinkedInClick}
-                  className="flex items-center gap-4 hover:text-orange-400 transition-colors"
+                  className="flex items-center gap-4 hover:text-orange-400 transition-all duration-300 hover:scale-105"
                 >
                   <Linkedin className="h-6 w-6 text-orange-400" />
                   <span className="text-lg">linkedin.com/in/gaya-saradhi-balaram-saragadam</span>
@@ -637,46 +860,46 @@ export default function Portfolio() {
               </div>
 
               {/* Contact Form */}
-              <div>
+              <div className="animate-on-scroll">
                 <form id="contact-form" onSubmit={handleContactSubmit} className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2 text-slate-300">Name *</label>
+                      <label className="block text-sm font-medium mb-2 text-blue-900">Name *</label>
                       <Input
                         name="user_name"
                         required
-                        className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400"
+                        className="bg-white/80 border-blue-300 text-blue-900 placeholder:text-slate-400 transition-all duration-300 focus:border-orange-400 focus:ring-orange-400"
                         placeholder="Your Name"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2 text-slate-300">Email *</label>
+                      <label className="block text-sm font-medium mb-2 text-blue-900">Email *</label>
                       <Input
                         name="user_email"
                         type="email"
                         required
-                        className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400"
+                        className="bg-white/80 border-blue-300 text-blue-900 placeholder:text-slate-400 transition-all duration-300 focus:border-orange-400 focus:ring-orange-400"
                         placeholder="your.email@example.com"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2 text-slate-300">Subject *</label>
+                    <label className="block text-sm font-medium mb-2 text-blue-900">Subject *</label>
                     <Input
                       name="subject"
                       required
-                      className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400"
+                      className="bg-white/80 border-blue-300 text-blue-900 placeholder:text-slate-400 transition-all duration-300 focus:border-orange-400 focus:ring-orange-400"
                       placeholder="Project Inquiry"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2 text-slate-300">Message *</label>
+                    <label className="block text-sm font-medium mb-2 text-blue-900">Message *</label>
                     <Textarea
                       name="message"
                       required
-                      className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 min-h-[120px]"
+                      className="bg-white/80 border-blue-300 text-blue-900 placeholder:text-slate-400 min-h-[120px] transition-all duration-300 focus:border-orange-400 focus:ring-orange-400"
                       placeholder="Tell me about your data project..."
                     />
                   </div>
@@ -684,7 +907,7 @@ export default function Portfolio() {
                   <Button
                     type="submit"
                     size="lg"
-                    className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold tracking-wider"
+                    className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold tracking-wider hover-glow transition-all duration-300 hover:scale-105"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (
@@ -707,18 +930,27 @@ export default function Portfolio() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 bg-slate-950 text-slate-400 text-center border-t border-slate-800">
+      <footer className="py-8 bg-blue-950 text-slate-400 text-center border-t border-slate-800">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between">
+          <div className="flex flex-col md:flex-row items-center justify-between animate-fade-in-up">
             <p>&copy; Portfolio. All rights reserved. | Design: HTML5 UP</p>
             <div className="flex items-center gap-6 mt-4 md:mt-0">
-              <button onClick={handleLinkedInClick} className="text-slate-400 hover:text-orange-400 transition-colors">
+              <button
+                onClick={handleLinkedInClick}
+                className="text-slate-400 hover:text-orange-400 transition-all duration-300 hover:scale-125"
+              >
                 <Linkedin className="h-5 w-5" />
               </button>
-              <button onClick={handleGitHubClick} className="text-slate-400 hover:text-orange-400 transition-colors">
+              <button
+                onClick={handleGitHubClick}
+                className="text-slate-400 hover:text-orange-400 transition-all duration-300 hover:scale-125"
+              >
                 <Github className="h-5 w-5" />
               </button>
-              <button onClick={handleEmailClick} className="text-slate-400 hover:text-orange-400 transition-colors">
+              <button
+                onClick={handleEmailClick}
+                className="text-slate-400 hover:text-orange-400 transition-all duration-300 hover:scale-125"
+              >
                 <Mail className="h-5 w-5" />
               </button>
             </div>
@@ -731,7 +963,7 @@ export default function Portfolio() {
         <Button
           onClick={scrollToTop}
           size="icon"
-          className="fixed bottom-8 right-8 bg-orange-500 hover:bg-orange-600 text-white rounded-full shadow-lg z-50"
+          className="fixed bottom-8 right-8 bg-orange-500 hover:bg-orange-600 text-white rounded-full shadow-lg z-50 hover-glow transition-all duration-300 hover:scale-110 animate-bounce-in"
         >
           <ChevronUp className="h-5 w-5" />
         </Button>
